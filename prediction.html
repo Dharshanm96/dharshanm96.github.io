@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Disaster Informer Lite</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<style>
+  body { font-family: Arial; background:#222; color:#fff; text-align:center; margin:0; }
+  h1 { color:#ff5722; margin:10px; }
+  #inputPanel { margin: 10px; }
+  input, button { padding:8px; font-size:16px; margin:5px; }
+  #map { height: 500px; margin: 10px; }
+  .popupHigh { color:red; font-weight:bold; }
+  .popupMedium { color:yellow; font-weight:bold; }
+  .popupLow { color:lime; font-weight:bold; }
+  #weather { margin: 10px; font-size:16px; }
+</style>
+</head>
+<body>
+
+<h1>🌐 Disaster Informer Lite</h1>
+<div id="inputPanel">
+  <input type="text" id="disasterInput" placeholder="Type disaster + location">
+  <button onclick="addAlert()">Send Alert</button>
+</div>
+<div id="map"></div>
+<div id="weather"><h3>🌦 Live Weather Info</h3><p id="weatherInfo">Loading...</p></div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script>
+
+// --- Map Setup ---
+var map = L.map('map').setView([12.9716, 77.5946], 10); // Bangalore center
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  maxZoom:19
+}).addTo(map);
+
+// Pre-defined locations for hackathon
+const locations = {
+  "sector 3":[12.975,77.595],
+  "riverbank":[12.960,77.580],
+  "outskirts":[12.990,77.620],
+  "hospital":[12.970,77.590]
+};
+
+// --- Self-predicting severity ---
+function predictSeverity(text){
+  text = text.toLowerCase();
+  let score = 0;
+  const keywords = {fire:3, flood:2, storm:2};
+  const locPoints = { 'sector 3':1, 'hospital':2, 'riverbank':1, 'outskirts':1 };
+  for(let k in keywords) if(text.includes(k)) score += keywords[k];
+  for(let l in locPoints) if(text.includes(l)) score += locPoints[l];
+  if(score>=5) return 'High';
+  if(score>=3) return 'Medium';
+  return 'Low';
+}
+
+// --- Add alert to map ---
+function addAlert(){
+  const input = document.getElementById('disasterInput').value;
+  if(!input) return alert('Please type a disaster + location!');
+  const severity = predictSeverity(input);
+  
+  // Find coordinates (simple hackathon way)
+  let coords = [12.9716,77.5946]; // default
+  for(let loc in locations){ if(input.toLowerCase().includes(loc)) coords = locations[loc]; }
+  
+  // Pin color
+  let color = severity==='High'?'red':severity==='Medium'?'yellow':'lime';
+  let popupClass = severity==='High'?'popupHigh':severity==='Medium'?'popupMedium':'popupLow';
+  
+  L.circleMarker(coords, {color:color, radius:10}).addTo(map)
+    .bindPopup(`${input} → <span class="${popupClass}">${severity}</span>`).openPopup();
+  
+  document.getElementById('disasterInput').value = '';
+  getWeather(coords); // update weather for location
+}
+
+// --- Live weather ---
+async function getWeather(coords){
+  const apiKey = '394185d893e3897ce94f471c986f35cd'; // Replace with your key
+  const [lat, lon] = coords;
+  try{
+    const res = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${apiKey}`);
+    const data = await res.json();
+    const info = `${data.name || 'Location'}: ${data.weather[0].description}, Temp: ${data.main.temp}°C, Humidity: ${data.main.humidity}%`;
+    document.getElementById('weatherInfo').textContent = info;
+  } catch(e){
+    document.getElementById('weatherInfo').textContent = 'Weather info not available';
+  }
+}
+
+// Optional: refresh weather every 5 minutes for last pin
+</script>
+
+</body>
+</html>

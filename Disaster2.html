@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Disaster Informer Dashboard</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Segoe UI", sans-serif;
+      }
+
+      body {
+        background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+        color: white;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 30px;
+      }
+
+      h1 {
+        text-align: center;
+        font-size: 2rem;
+        margin-bottom: 20px;
+        letter-spacing: 1px;
+      }
+
+      .dashboard {
+        width: 90%;
+        max-width: 1000px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+      }
+
+      .input-section {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+      }
+
+      input,
+      select,
+      button {
+        padding: 10px 15px;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+      }
+
+      input,
+      select {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.15);
+        color: white;
+        outline: none;
+      }
+
+      input::placeholder {
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      button {
+        background: linear-gradient(90deg, #ff512f, #dd2476);
+        cursor: pointer;
+        color: white;
+        transition: 0.2s;
+      }
+
+      button:hover {
+        transform: scale(1.05);
+      }
+
+      .alert-list {
+        display: grid;
+        gap: 15px;
+      }
+
+      .alert {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px;
+        border-radius: 10px;
+        color: white;
+        animation: fadeIn 0.5s ease;
+      }
+
+      .alert .info {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+      }
+
+      .alert h3 {
+        font-size: 1.1rem;
+      }
+
+      .alert small {
+        font-size: 0.8rem;
+        color: rgba(255, 255, 255, 0.8);
+      }
+
+      .high {
+        background: rgba(255, 0, 0, 0.7);
+      }
+      .medium {
+        background: rgba(255, 165, 0, 0.7);
+      }
+      .low {
+        background: rgba(0, 255, 127, 0.7);
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      footer {
+        margin-top: 20px;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>🌍 Real-Time Disaster Informer Dashboard</h1>
+
+    <div class="dashboard">
+      <div class="input-section">
+        <input
+          id="disasterType"
+          type="text"
+          placeholder="Enter disaster type (e.g., Flood, Fire)"
+        />
+        <input
+          id="location"
+          type="text"
+          placeholder="Enter location (e.g., City name)"
+        />
+        <select id="severity">
+          <option value="low">Low</option>
+          <option value="medium">Medium</option>
+          <option value="high">High</option>
+        </select>
+        <button onclick="addAlert()">Add Alert</button>
+      </div>
+
+      <div class="alert-list" id="alertList">
+        <!-- Alerts will appear here dynamically -->
+      </div>
+    </div>
+
+
+    <script>
+      const alertList = document.getElementById("alertList");
+
+      function addAlert() {
+        const type = document.getElementById("disasterType").value.trim();
+        const location = document.getElementById("location").value.trim();
+        const severity = document.getElementById("severity").value;
+
+        if (!type || !location) {
+          alert("Please enter both disaster type and location!");
+          return;
+        }
+
+        const alertBox = document.createElement("div");
+        alertBox.classList.add("alert", severity);
+
+        const info = document.createElement("div");
+        info.classList.add("info");
+        info.innerHTML = `
+        <h3>${type} reported in ${location}</h3>
+        <small>Severity: ${severity.toUpperCase()}</small>
+        <small>Time: ${new Date().toLocaleTimeString()}</small>
+      `;
+
+        const icon = document.createElement("div");
+        icon.innerHTML =
+          severity === "high" ? "🚨" : severity === "medium" ? "⚠" : "✅";
+        icon.style.fontSize = "1.8rem";
+
+        alertBox.appendChild(info);
+        alertBox.appendChild(icon);
+        alertList.prepend(alertBox); // latest alert on top
+
+        document.getElementById("disasterType").value = "";
+        document.getElementById("location").value = "";
+      }
+
+      // optional: generate random alerts every 15 sec (for demo)
+      const randomDisasters = [
+        "Flood",
+        "Fire",
+        "Earthquake",
+        "Cyclone",
+        "Landslide",
+      ];
+      const randomPlaces = [
+        "Delhi",
+        "Mumbai",
+        "Chennai",
+        "Hyderabad",
+        "Kolkata",
+        "Goa",
+      ];
+
+      setInterval(() => {
+        const type =
+          randomDisasters[Math.floor(Math.random() * randomDisasters.length)];
+        const location =
+          randomPlaces[Math.floor(Math.random() * randomPlaces.length)];
+        const levels = ["low", "medium", "high"];
+        const severity = levels[Math.floor(Math.random() * 3)];
+
+        const fake = { type, location, severity };
+        const alertBox = document.createElement("div");
+        alertBox.classList.add("alert", severity);
+        alertBox.innerHTML = `
+        <div class="info">
+          <h3>${type} detected near ${location}</h3>
+          <small>Severity: ${severity.toUpperCase()}</small>
+          <small>Time: ${new Date().toLocaleTimeString()}</small>
+        </div>
+        <div style="font-size:1.8rem;">${
+          severity === "high" ? "🚨" : severity === "medium" ? "⚠" : "✅"
+        }</div>
+      `;
+        alertList.prepend(alertBox);
+      }, 15000);
+    </script>
+  </body>
+</html>
